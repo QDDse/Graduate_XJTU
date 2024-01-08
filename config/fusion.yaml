@@ -1,0 +1,56 @@
+dataroot: "./datasets/MSRS"
+mode: true
+gpu: 0
+seed: 2020
+
+train_config:
+  num_epoch: 10
+  nThreads: 4
+  amp: true
+  optim: "adam"
+  scheduler: null
+  resume: null
+  deterministic: true 
+  momentum: 0.9
+  weight_decay: 5e-4
+  lr_start: 1e-3
+  power: 0.9
+  warmup_steps: 1000
+  batch_size: 24
+  patch: 192
+  lr: 0.00001
+  c_intensity: 3000
+  c_detail: 3000
+  eta: 0.5 warmup_start_lr: 1e-5
+
+demo:
+  dataset: 'demo'
+  data_path: 'helpers'
+  label_path: 'helpers/labels'
+  experts: ['infred']  # 'none' for PrismerZ
+
+  image_resolution: 480
+  prismer_model: 'prismer_base'  # 'prismer-large' for Prismer(Z)-Large
+  freeze: 'freeze_vision'
+
+  prefix: 'A picture of'
+
+Data Acquisition:
+  ir_image_path: "E:\\project\\yang\\data\\21_pairs_tno\\ir"
+  vis_image_path: "E:\\project\\yang\\data\\21_pairs_tno\\vis"
+  test_irimage_path: "E:\\project\\code\\multitask2023\\M3FD-simplified\\ir\\half-size"
+  test_visimage_path: "E:\\project\\code\\multitask2023\\M3FD-simplified\\vis\\half-size"
+  kaist_path: "/data/yg/data/kaist-cvpr15/images"
+
+loss:
+  loss_alpha: 0.2
+  loss_beta: 0.167
+  loss_gamma: 20
+  loss_alpha2: 0.000001
+  loss_style: 1
+  loss_patch: 2
+  loss_patch_alpha: 130
+  log_dir: "./fusion_train_log"
+  model_path: "/home/vipsl415/yg/code/inf_fusion2022/fusion_model/"
+  model: "fusion_model.pth"
+  feature_num: 32
