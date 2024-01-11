@@ -91,7 +91,7 @@ class TrainKaist(data.Dataset):
     Using Kaist dataset to train
     """
 
-    def __init__(self, arsg):
+    def __init__(self, args):
         super(TrainKaist, self).__init__()
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.ir_name, self.vis_name = read_kaist(args.kaist_path)
@@ -245,3 +245,4 @@ if __name__ == "__main__":
     )
     # print(dataset[0])
     print(len(train_loader))
+
