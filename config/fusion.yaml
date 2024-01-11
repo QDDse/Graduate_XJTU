@@ -3,6 +3,16 @@ mode: true
 gpu: 0
 seed: 2020
 
+model:
+  input_channels: 1
+  out_channels: 16
+  input_sensors: ['Vis', 'Inf']
+  coder_layers: 4
+  decoder_layers: 4
+  # 新增 encoder
+  encoder_pth: 'CLF_Net.pth'
+
+
 train_config:
   num_epoch: 10
   nThreads: 4
@@ -21,7 +31,9 @@ train_config:
   lr: 0.00001
   c_intensity: 3000
   c_detail: 3000
-  eta: 0.5 warmup_start_lr: 1e-5
+  eta: 0.5
+  warmup_start_lr: 1e-5
+
 
 demo:
   dataset: 'demo'

@@ -43,7 +43,7 @@ from utils import *
 def load_config(config_path):
     assert os.path.isfile(config_path) and config_path.endswith(
         ".yaml"
-    ), "{} is not a yaml file".format(file)
+    ), "{} is not a yaml file".format(config_path)
 
     with open(config_path, "r") as file:
         return yaml.safe_load(file)
