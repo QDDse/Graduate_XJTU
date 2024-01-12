@@ -1,5 +1,3 @@
-dataroot: "./datasets/MSRS"
-mode: true
 gpu: 0
 seed: 2020
 
@@ -10,11 +8,13 @@ model:
   coder_layers: 4
   decoder_layers: 4
   # 新增 encoder
-  encoder_pth: 'CLF_Net.pth'
+  encoder_pth: '/root/autodl-tmp/Graduate_XJTU/checkpoint/fusion_model.pth'
+  n_feat: 64
+  emb_dim: 512
 
 
 train_config:
-  num_epoch: 10
+  num_epoch: 50
   nThreads: 4
   amp: true
   optim: "adam"
@@ -22,20 +22,20 @@ train_config:
   resume: null
   deterministic: true 
   momentum: 0.9
-  weight_decay: 5e-4
-  lr_start: 1e-3
+  weight_decay: 0.0005
+  lr_start: 0.001 
   power: 0.9
-  warmup_steps: 1000
+  warmup_steps: 100
   batch_size: 24
   patch: 192
   lr: 0.00001
   c_intensity: 3000
   c_detail: 3000
   eta: 0.5
-  warmup_start_lr: 1e-5
+  warmup_start_lr: 0.00001 
 
 
-demo:
+Prismer:
   dataset: 'demo'
   data_path: 'helpers'
   label_path: 'helpers/labels'
@@ -47,12 +47,13 @@ demo:
 
   prefix: 'A picture of'
 
-Data Acquisition:
+Data_Acquisition:
   ir_image_path: "E:\\project\\yang\\data\\21_pairs_tno\\ir"
   vis_image_path: "E:\\project\\yang\\data\\21_pairs_tno\\vis"
   test_irimage_path: "E:\\project\\code\\multitask2023\\M3FD-simplified\\ir\\half-size"
   test_visimage_path: "E:\\project\\code\\multitask2023\\M3FD-simplified\\vis\\half-size"
-  kaist_path: "/data/yg/data/kaist-cvpr15/images"
+  kaist_path: "/root/autodl-tmp/dataset/KAIST/"
+  patch: 192
 
 loss:
   loss_alpha: 0.2
@@ -63,6 +64,4 @@ loss:
   loss_patch: 2
   loss_patch_alpha: 130
   log_dir: "./fusion_train_log"
-  model_path: "/home/vipsl415/yg/code/inf_fusion2022/fusion_model/"
-  model: "fusion_model.pth"
   feature_num: 32

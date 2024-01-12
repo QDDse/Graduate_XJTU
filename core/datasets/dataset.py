@@ -1,3 +1,4 @@
+from typing import Any
 import os
 import cv2
 import glob
@@ -91,11 +92,11 @@ class TrainKaist(data.Dataset):
     Using Kaist dataset to train
     """
 
-    def __init__(self, args):
+    def __init__(self, kaist_path, patch):
         super(TrainKaist, self).__init__()
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.ir_name, self.vis_name = read_kaist(args.kaist_path)
-        self.patch = args.patch
+        self.ir_name, self.vis_name = read_kaist(kaist_path)
+        self.patch = patch
 
     def __len__(self):
         assert len(self.ir_name) == len(self.vis_name)
@@ -239,10 +240,16 @@ class TestDataColor(data.Dataset):
 
 
 if __name__ == "__main__":
-    dataset = TrainKaist()
+
+    class ARGS:
+        kaist_path = "/root/autodl-tmp/dataset/KAIST/"
+        patch = 192
+
+    args = ARGS()
+
+    dataset = TrainKaist(args)
     train_loader = data.DataLoader(
         dataset, batch_size=8, shuffle=True, num_workers=8, pin_memory=True
     )
     # print(dataset[0])
     print(len(train_loader))
-

@@ -5,6 +5,7 @@ sys.path.append("../")
 import torch
 import torch.nn as nn
 import numpy as np
+import timm
 
 from .module import *
 
@@ -75,7 +76,9 @@ class DualAttEncoder(nn.Module):
 
 # ---------- Dual Attention Edge Unit ----------
 class DualEdgeAttEncoder(nn.Module):
-    def __init__(self, n_feat, kernel_size=3, reduction=8, bias=False, act=nn.PReLU()):
+    def __init__(
+        self, args, n_feat, kernel_size=3, reduction=8, bias=False, act=nn.PReLU()
+    ):
         super(DualEdgeAttEncoder, self).__init__()
         modules_body = [
             conv(1, n_feat, kernel_size, bias=bias),
@@ -92,6 +95,14 @@ class DualEdgeAttEncoder(nn.Module):
         self.Edge = Sobelxy(n_feat)
         self.conv1x1 = nn.Conv2d(n_feat * 2, n_feat, kernel_size=1, bias=bias)
 
+        # patchemb
+        self.patch_emb = PatchEmbed(
+            img_size=args["Data_Acquisition"]["patch"],
+            patch_size=16,
+            in_chans=args["model"]["n_feat"],
+            embed_dim=args["model"]["emb_dim"],
+        )
+
     def forward(self, x):
         res = self.body(x)
         sa_branch = self.SA(res)
@@ -100,7 +111,8 @@ class DualEdgeAttEncoder(nn.Module):
         res_att = self.conv1x1(res_att)
         edge = self.Edge(res)
         out = res_att + edge
-        return out
+
+        return self.patch_emb(out)
 
 
 # test
