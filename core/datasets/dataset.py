@@ -12,7 +12,7 @@ import numpy as np
 import torch.utils.data as data
 import torchvision.transforms as transforms
 
-from utils import read_kaist
+from core.utils import read_kaist
 
 
 class TrainData(data.Dataset):

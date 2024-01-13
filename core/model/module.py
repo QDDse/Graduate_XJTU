@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.model_zoo as model_zoo
 
-from utils import to_2tuple
+from core.utils import to_2tuple
 
 
 # from DMA
