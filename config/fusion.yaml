@@ -1,5 +1,6 @@
-gpu: 0
+gpu: 2
 seed: 2020
+
 
 model:
   input_channels: 1
@@ -8,13 +9,13 @@ model:
   coder_layers: 4
   decoder_layers: 4
   # 新增 encoder
-  encoder_pth: '/root/autodl-tmp/Graduate_XJTU/checkpoint/fusion_model.pth'
+  encoder_pth: '/home/howderlife/tmp/checkpoint/fusion_model.pth'
   n_feat: 64
   emb_dim: 512
 
 
 train_config:
-  num_epoch: 50
+  num_epoch: 100
   nThreads: 4
   amp: true
   optim: "adam"
@@ -25,7 +26,7 @@ train_config:
   weight_decay: 0.0005
   lr_start: 0.001 
   power: 0.9
-  warmup_steps: 100
+  warmup_steps: 2000
   batch_size: 24
   patch: 192
   lr: 0.00001
@@ -52,7 +53,7 @@ Data_Acquisition:
   vis_image_path: "E:\\project\\yang\\data\\21_pairs_tno\\vis"
   test_irimage_path: "E:\\project\\code\\multitask2023\\M3FD-simplified\\ir\\half-size"
   test_visimage_path: "E:\\project\\code\\multitask2023\\M3FD-simplified\\vis\\half-size"
-  kaist_path: "/root/autodl-tmp/dataset/KAIST/"
+  kaist_path: "/home/howderlife/tmp/KAIST/"
   patch: 192
 
 loss:
@@ -65,3 +66,26 @@ loss:
   loss_patch_alpha: 130
   log_dir: "./fusion_train_log"
   feature_num: 32
+
+config_sweep:
+  method: random
+  project_name: dual_encoder_pa_search
+  metric:
+    name: epoch_loss
+    goal: minimize
+  parameters:
+    lr_start:
+      distribution: uniform
+      min: 0.001
+      max: 0.01
+    optim_type:
+      values: ['Adam', 'SGD', 'AdamW']
+    emb_dim:
+      values: [512, 768, 1024]
+    batch_size:
+      values: [16, 24, 32, 48]
+  early_terminate:
+    type: hyperband
+    min_iter: 3
+    eta: 2
+    s: 3

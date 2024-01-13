@@ -64,7 +64,7 @@ def get_parser():
     )
     parser.add_argument(
         "--resume",
-        default="./checkpoint/fusion.yaml",
+        default=None,
         type=str,
         help="resume pth file",
     )
@@ -85,18 +85,26 @@ def get_parser():
     configs['config'] = args.config  # Add the config file path to configs
     configs['resume'] = args.resume  # Add the resume file path to configs
     configs['sweep'] = args.sweep  # Add the sweep flag to configs
+
     return configs
+# 初始化No Sweep superParams
+configs = get_parser()
+config_sweep = configs['config_sweep'] 
 
-
-
-def train(configs, config_sweep=None):
+def train(config_sweep=None):
     # load resume of Encoder_dual
-    wandb.init(
-        project="Dual_encoder_patchAlign",
-        name="dual_encoder_patch_align_continue",
-        entity="qddse",
-        config=configs,
+    device = torch.device(
+        "cuda:{}".format(configs["gpu"]) if torch.cuda.is_available() else "cpu"
     )
+    if config_sweep is not None:
+        wandb.init()
+    elif config_sweep is None:
+        wandb.init(
+            project="Dual_encoder_patchAlign",
+            name="dual_encoder_patch_align_continue",
+            config=configs,
+        )
+
     if configs['resume'] is not None:
         ckpt = torch.load(configs['resume'])
     else:        
@@ -106,8 +114,6 @@ def train(configs, config_sweep=None):
     dual_att_encoder = DualEdgeAttEncoder(configs, configs["model"]["n_feat"])
     dual_att_encoder.load_state_dict(ckpt, strict=False)
     # summary(dual_att_encoder)
-        
-
     # dataset
     dataset_train = TrainKaist(
         configs["Data_Acquisition"]["kaist_path"],
@@ -135,9 +141,7 @@ def train(configs, config_sweep=None):
     if train_configs["deterministic"]:
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-    device = torch.device(
-        "cuda:{}".format(configs["gpu"]) if torch.cuda.is_available() else "cpu"
-    )
+
 
     dual_att_encoder.to(device)
     # 先加载dataloader 计算每个epoch的的迭代步数 然后计算总的迭代步数
@@ -176,7 +180,7 @@ def train(configs, config_sweep=None):
         
         else:
             optimizer = None
-            assert NotImplementedError, f"Unsupported optimizer: {sweep_config.optim_type}"
+            assert NotImplementedError, f"Unsupported optimizer: {config_sweep.optim_type}"
     
     else:
         optimizer = Optimizer(
@@ -191,7 +195,7 @@ def train(configs, config_sweep=None):
         )
             
     # 训练循环
-    start_ep = 48
+    start_ep = 0 
     best_loss = float('inf')
     for epoch in range(start_ep, train_configs["num_epoch"]):
         epoch_loss = 0.0
@@ -243,53 +247,14 @@ def train(configs, config_sweep=None):
             )
             wandb.save(f"model_epoch_{epoch+1}.pth")
 
-configs = get_parser()
+
 # TODO: 搭建wandb Sweep 搜参数
 # init wandb Sweep 
-sweep_config = {
-    'method': 'random'  # random; grid; bayes
-    'project_name': 'dual_encoder_pa_search'
-} 
-metric = {
-    'name': 'pa_loss',
-    'goal': 'minimize'
-}
-
-sweep_config['metric'] = metric
-# define superparams space
-sweep_config['parameters'] = {}
-# random superparams -- 构建参数空间
-sweep_config['parameters'].update({
-    'lr_start': {
-        'distribution': 'uniform',
-        'min': 1e-3,
-        'max': 1e-2    
-    },
-    'optim_type': {
-        'value': ['Adam', 'SGD', 'AdamW']
-    },
-    'emb_dim':{
-        'value': [512, 768, 1024]
-    },
-    'batch_size': {
-        'distribution': 'q_log_uniform',
-        'q': 1,
-        'min': math.log(32),
-        'max': math.log(256)
-    }
-})
-# define 剪枝
-sweep_config['early_terminate'] = {
-    'type': 'hyperband',
-    'min_iter': 3,
-    'eta': 2,
-    's': 3
-}  # 在step=3，6，12 时考虑是否剪枝
-
-if configs["sweep"] is not None:
+if configs['sweep'] is not None:
     # 初始化 sweep 
-    sweep_id = wandb.sweep(sweep_config, project=sweep_config.project_name)
+    sweep_id = wandb.sweep(config_sweep, project=config_sweep['project_name'])
     assert configs['sweep'] > 0, f"The sweep count must be postive int." 
     wandb.agent(sweep_id, function=train, count=configs['sweep'])
-
-train(configs=configs, config_sweep=sweep_config)
+    
+else:
+    train(config_sweep=config_sweep)
