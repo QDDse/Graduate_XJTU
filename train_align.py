@@ -55,7 +55,7 @@ def load_config(config_path):
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(description="DIFFusion Pytorch Vis and Inf fusion")
+    parser = argparse.ArgumentParser(description="Pytorch Vis and Inf fusion")
     parser.add_argument(
         "--config",
         default="/root/autodl-tmp/Graduate_XJTU/config/fusion.yaml",
@@ -70,7 +70,7 @@ def get_parser():
     )
     parser.add_argument(
         "--sweep", 
-        default=False,
+        default=None,
         type=int,
         help="If seach superparams and sweep count."
     )
@@ -89,7 +89,8 @@ def get_parser():
     return configs
 # 初始化No Sweep superParams
 configs = get_parser()
-config_sweep = configs['config_sweep'] 
+if configs['sweep'] is not None:
+    config_sweep = configs['config_sweep'] 
 
 def train(config_sweep=None):
     # load resume of Encoder_dual
@@ -119,6 +120,13 @@ def train(config_sweep=None):
         configs["Data_Acquisition"]["kaist_path"],
         patch=configs["Data_Acquisition"]["patch"],
     )
+    # sweep only on 0.05 * train_set
+    dataset_size = len(dataset_train)
+    subset_size = int(dataset_size) * 0.05
+    if config_sweep is not None:
+        indices = torch.randperm(len(dataset_train)).tolist()
+        subset_indices = indices[:subset_size]
+        dataset_train = torch.utils.data.Subset(dataset_train, subset_indices)
 
     # dataloader
     train_configs = configs["train_config"]
@@ -195,7 +203,7 @@ def train(config_sweep=None):
         )
             
     # 训练循环
-    start_ep = 0 
+    start_ep = 100
     best_loss = float('inf')
     for epoch in range(start_ep, train_configs["num_epoch"]):
         epoch_loss = 0.0
@@ -230,13 +238,17 @@ def train(config_sweep=None):
         # 计算平均loss
         epoch_loss /= len(train_loader)
 
-        wandb.log({"epoch_loss": epoch_loss})
+        wandb.log({"epoch_loss": epoch_loss, "epoch": epoch})
 
         # is best
         if epoch_loss < best_loss:
             best_loss = epoch_loss
             torch.save(
-                dual_att_encoder.state_dict(), "./checkpoint/patch_align/best_model.pth"
+                {
+                    "model": dual_att_encoder.state_dict(),
+                    "epoch": epoch
+                },
+                "./checkpoint/patch_align/best_model.pth"
             )
 
         # 每两个epoch保存一次模型
@@ -247,7 +259,6 @@ def train(config_sweep=None):
             )
             wandb.save(f"model_epoch_{epoch+1}.pth")
 
-
 # TODO: 搭建wandb Sweep 搜参数
 # init wandb Sweep 
 if configs['sweep'] is not None:
@@ -257,4 +268,4 @@ if configs['sweep'] is not None:
     wandb.agent(sweep_id, function=train, count=configs['sweep'])
     
 else:
-    train(config_sweep=config_sweep)
+    train()

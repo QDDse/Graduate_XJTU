@@ -599,3 +599,20 @@ class PatchEmbed(nn.Module):
             x = x.flatten(2).transpose(1, 2)  # BCHW -> BNC
         x = self.norm(x)
         return x
+
+
+# TODO: SimAM -- 无参数attention机制
+# class SimAM(nn.Module):
+#     # X: input feature [N, C, H, W]
+#     # lambda: coefficient λ in Eqn (5)
+#     def forward (X, lambda):
+#         # spatial size
+#         n = X.shape[2] * X.shape[3] - 1
+#         # square of (t - u)
+#         d = (X - X.mean(dim=[2,3])).pow(2)
+#         # d.sum() / n is channel variance
+#         v = d.sum(dim=[2,3]) / n
+#         # E_inv groups all importance of X
+#         E_inv = d / (4 * (v + lambda)) + 0.5
+#         # return attended features
+#         return X * sigmoid(E_inv)
